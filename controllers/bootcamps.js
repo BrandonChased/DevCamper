@@ -7,23 +7,77 @@ const asyncHandler = require("../middleware/async");
 // @desc        Get all Bootcamps
 // @route       GET /api/v1/bootcamps
 // @access      Public
-exports.getBootcamps = asyncHandler(async (req, res, next) => {  
+exports.getBootcamps = asyncHandler(async (req, res, next) => {
     let query;
 
-    let queryStr = JSON.stringify(req.query);
+    // Copy of req.query
+    const reqQuery = { ...req.query };
 
-    
-    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`)
-    
-    console.log(queryStr)
-    console.log(req.query)
+    // Fields to exclude
+    const removeFields = ["select", "sort", "page", "limit"];
+
+    // Loop over removefields and delete them from reqQuery
+    removeFields.forEach((param) => delete reqQuery[param]);
+
+    // Query String
+    let queryStr = JSON.stringify(reqQuery);
+
+    // Allowing operators in the queryStr
+    queryStr = queryStr.replace(
+        /\b(gt|gte|lt|lte|in)\b/g,
+        (match) => `$${match}`
+    );
+
+    console.log(queryStr);
+
+    // Finding resourse
     query = Bootcamp.find(JSON.parse(queryStr));
 
+    // Select Fields
+    if (req.query.select) {
+        const fields = req.query.select.split(",").join(" ");
+        query = query.select(fields);
+    }
+
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(",").join(" ");
+        query = query.sort(sortBy);
+    } else {
+        query = query.sort("-createAt");
+    }
+
+    // Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 25;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const totalDocs = await Bootcamp.countDocuments();
+
+    query.skip(startIndex).limit(limit);
+
+    // Executing query
     const bootcamps = await query;
+
+    // Pagination result
+    const pagination = {};
+
+    if (endIndex < totalDocs) {
+        pagination.next = {
+            page: page + 1,
+            limit,
+        };
+    }
+
+    if (startIndex > 0) {
+        pagination.prev = {
+            page: page - 1,
+            limit,
+        };
+    }
 
     res
         .status(200)
-        .json({ succes: true, count: bootcamps.length, data: bootcamps });
+        .json({ succes: true, count: bootcamps.length, pagination, data: bootcamps });
 });
 
 // @desc        Get single Bootcamp
@@ -109,5 +163,5 @@ exports.getBootcampsinRadius = asyncHandler(async (req, res, next) => {
         success: true,
         count: bootcamps.length,
         data: bootcamps,
-    })
+    });
 });
