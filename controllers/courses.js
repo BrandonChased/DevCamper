@@ -54,10 +54,10 @@ exports.getCourse = asyncHandler(async (req, res, next) => {
 // @desc        Add course
 // @route       POST /api/v1/bootcamps/:bootcampId/courses
 // @access      Private
-exports.createCourse = asyncHandler(async (req,res,next) => {
+exports.createCourse = asyncHandler(async (req, res, next) => {
     req.body.bootcamp = req.params.bootcampId;
 
-    const bootcamp = await Bootcamp.findById(req.params.bootcampId)
+    const bootcamp = await Bootcamp.findById(req.params.bootcampId);
 
     if (!bootcamp) {
         return next(
@@ -66,7 +66,7 @@ exports.createCourse = asyncHandler(async (req,res,next) => {
         );
     }
 
-    const course = await Course.create(req.body) 
+    const course = await Course.create(req.body);
 
     res.status(200).json({
         success: true,
@@ -77,8 +77,8 @@ exports.createCourse = asyncHandler(async (req,res,next) => {
 // @desc        Update course
 // @route       POST /api/v1/courses/:id
 // @access      Private
-exports.updatedCourse = asyncHandler(async (req,res,next) => {
-    const {id} = req.params;
+exports.updatedCourse = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
 
     let course = await Course.findById(id);
 
@@ -92,7 +92,7 @@ exports.updatedCourse = asyncHandler(async (req,res,next) => {
     course = await Course.findByIdAndUpdate(id, req.body, {
         new: true,
         runValidators: true,
-    })
+    });
 
     res.status(200).json({
         success: true,
@@ -103,8 +103,8 @@ exports.updatedCourse = asyncHandler(async (req,res,next) => {
 // @desc        Delete course
 // @route       POST /api/v1/courses/:id
 // @access      Private
-exports.deleteCourse = asyncHandler(async (req,res,next) => {
-    const {id} = req.params;
+exports.deleteCourse = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
 
     let course = await Course.findByIdAndDelete(id);
 
